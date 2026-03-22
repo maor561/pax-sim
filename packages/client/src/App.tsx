@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { CockpitMetrics } from './components/CockpitMetrics';
 import { PassengerList } from './components/PassengerList';
 import { FlightChart } from './components/FlightChart';
-import { FloorPlanVisualization } from './components/FloorPlanVisualization';
+import { CabinSeatMap } from './components/CabinSeatMap';
 import { CockpitLayout } from './layouts/CockpitLayout';
 import { usePassengerStates } from './hooks/usePassengerStates';
 
@@ -231,9 +231,9 @@ export function App() {
           </div>
         )}
 
-        {/* Cabin Visualization */}
+        {/* Cabin Seat Map */}
         {passengers.length > 0 && (
-          <FloorPlanVisualization passengers={passengers} passengerStates={passengerStates} />
+          <CabinSeatMap passengers={passengers} passengerStates={passengerStates} />
         )}
 
         {/* Flight Chart */}
