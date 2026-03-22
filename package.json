@@ -1,0 +1,23 @@
+{
+  "name": "pax-sim",
+  "version": "0.1.0",
+  "description": "Flight passenger experience simulator for MSFS2024",
+  "private": true,
+  "workspaces": [
+    "packages/server",
+    "packages/client"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "type-check": "npm run type-check --workspaces"
+  },
+  "keywords": [
+    "msfs",
+    "simulator",
+    "passengers",
+    "realtime"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Passenger {
+  id                String    @id @default(cuid())
+  name              String
+  age               Int
+  nationality       String
+  ticketClass       String    // "economy", "business", "first"
+  seatNumber        String
+  isFrequentFlyer   Boolean   @default(false)
+  frequentFlyerDays Int       @default(0)
+  personality       String    // "calm", "anxious", "fearful", "business", "casual"
+  flightExperience  Int       @default(0) // 0-100
+
+  flights           FlightPassenger[]
+  states            PassengerState[]
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Flight {
+  id                String    @id @default(cuid())
+  date              DateTime
+  origin            String
+  destination       String
+  aircraftType      String
+  cruiseAltitude    Int
+  estimatedDuration Int       // in minutes
+
+  passengers        FlightPassenger[]
+  logs              FlightLog[]
+
+  startedAt         DateTime?
+  endedAt           DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model FlightPassenger {
+  id                String    @id @default(cuid())
+  passengerId       String
+  flightId          String
+
+  passenger         Passenger @relation(fields: [passengerId], references: [id], onDelete: Cascade)
+  flight            Flight    @relation(fields: [flightId], references: [id], onDelete: Cascade)
+
+  @@unique([passengerId, flightId])
+}
+
+model FlightLog {
+  id                String    @id @default(cuid())
+  flightId          String
+
+  flight            Flight    @relation(fields: [flightId], references: [id], onDelete: Cascade)
+
+  timestamp         DateTime
+  altitude          Float
+  speed             Float
+  gForce            Float
+  turbulence        Float
+  phase             String    // "ground", "takeoff", "climb", "cruise", "descent", "landing"
+
+  createdAt         DateTime  @default(now())
+}
+
+model PassengerState {
+  id                String    @id @default(cuid())
+  passengerId       String
+
+  passenger         Passenger @relation(fields: [passengerId], references: [id], onDelete: Cascade)
+
+  state             String    // "calm", "comfortable", "anxious", "scared", "relaxed"
+  comfort           Int       // 0-100
+  reaction          String    // descriptive reaction text
+
+  timestamp         DateTime  @default(now())
+}
