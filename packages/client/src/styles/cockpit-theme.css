@@ -1,0 +1,513 @@
+/**
+ * Aviation Cockpit Theme
+ * Professional flight operations center aesthetic with cockpit colors and styling
+ */
+
+:root {
+  /* Primary Colors - Cockpit/Flight Deck */
+  --primary-dark: #0a1628; /* Deep navy - night sky */
+  --primary-darker: #050d14; /* Darker night sky */
+
+  /* Accent Colors - PFD/Glass Cockpit Display */
+  --accent-cyan: #00d4ff; /* Bright cyan - primary display color */
+  --accent-cyan-muted: #0099cc;
+  --accent-amber: #ffb300; /* Amber - caution/warning */
+  --accent-green: #00ff41; /* Bright green - OK/normal status */
+  --accent-red: #ff4444; /* Red - alert/critical */
+  --accent-magenta: #ff00ff; /* Magenta - navigation/heading */
+
+  /* Neutral Colors */
+  --neutral-light: #e8f0f8; /* Very light blue-gray */
+  --neutral-medium: #7a8a9e; /* Medium blue-gray */
+  --neutral-dark: #1a2332; /* Dark blue-gray */
+
+  /* Gauge/Indicator Colors */
+  --gauge-border: #1a3d4d;
+  --gauge-bg: rgba(10, 22, 40, 0.6);
+  --gauge-needle: #00d4ff;
+
+  /* Alert Colors */
+  --warning-yellow: #ffc300;
+  --caution-orange: #ff8800;
+  --alert-red: #ff4444;
+
+  /* Transparency */
+  --glass-opacity: 0.85;
+}
+
+* {
+  color-scheme: dark;
+}
+
+html {
+  background: linear-gradient(135deg, #050d14 0%, #0a1628 50%, #0d1f35 100%);
+  background-attachment: fixed;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  background-color: var(--primary-dark);
+  color: var(--neutral-light);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Monospace for data/numbers (like cockpit displays) */
+code,
+.data-value,
+.numeric-display {
+  font-family: 'Source Code Pro', 'JetBrains Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--neutral-light);
+  margin: 0;
+}
+
+h1 {
+  font-size: 2.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-cyan);
+}
+
+h2 {
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+h3 {
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Card/Panel Styling */
+.panel,
+.card,
+.metrics-box {
+  background: rgba(26, 35, 50, var(--glass-opacity));
+  border: 1px solid var(--gauge-border);
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+  padding: 1.25rem;
+  box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.1),
+    0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Primary Panel - Highlighted */
+.panel-primary {
+  background: rgba(10, 212, 255, 0.05);
+  border-color: var(--accent-cyan);
+  box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.3),
+    0 4px 16px rgba(0, 212, 255, 0.15);
+}
+
+/* Alert Panel */
+.panel-alert {
+  background: rgba(255, 68, 68, 0.05);
+  border-color: var(--accent-red);
+  box-shadow: inset 0 0 0 1px rgba(255, 68, 68, 0.3),
+    0 4px 16px rgba(255, 68, 68, 0.1);
+}
+
+/* Caution Panel */
+.panel-caution {
+  background: rgba(255, 179, 0, 0.05);
+  border-color: var(--accent-amber);
+  box-shadow: inset 0 0 0 1px rgba(255, 179, 0, 0.3),
+    0 4px 16px rgba(255, 179, 0, 0.1);
+}
+
+/* Status Indicator */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 3px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-ok {
+  color: var(--accent-green);
+  background: rgba(0, 255, 65, 0.1);
+  border-left: 3px solid var(--accent-green);
+}
+
+.status-caution {
+  color: var(--accent-amber);
+  background: rgba(255, 179, 0, 0.1);
+  border-left: 3px solid var(--accent-amber);
+}
+
+.status-alert {
+  color: var(--accent-red);
+  background: rgba(255, 68, 68, 0.1);
+  border-left: 3px solid var(--accent-red);
+}
+
+/* Gauge/Metric Display */
+.gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid var(--gauge-border);
+  border-radius: 50%;
+  background: var(--gauge-bg);
+  position: relative;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+.gauge-label {
+  position: absolute;
+  top: 12px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--neutral-medium);
+}
+
+.gauge-value {
+  font-size: 2rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  font-family: 'Source Code Pro', monospace;
+  letter-spacing: 0.05em;
+}
+
+.gauge-unit {
+  font-size: 0.75rem;
+  color: var(--neutral-medium);
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+}
+
+/* Needle Animation */
+@keyframes needle-swing {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(var(--rotation, 0deg));
+  }
+}
+
+.gauge-needle {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 2px;
+  height: 40%;
+  background: var(--gauge-needle);
+  transform-origin: bottom center;
+  animation: needle-swing 0.5s ease-out forwards;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+}
+
+/* Horizontal Bar Indicators */
+.bar-indicator {
+  width: 100%;
+  height: 24px;
+  background: var(--gauge-bg);
+  border: 1px solid var(--gauge-border);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+  transition: width 0.2s ease-out;
+}
+
+.bar-fill.warning {
+  background: linear-gradient(90deg, var(--accent-amber), var(--accent-red));
+}
+
+/* Flight Phase Indicator */
+.phase-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 3px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--gauge-border);
+}
+
+.phase-ground {
+  color: var(--accent-amber);
+  background: rgba(255, 179, 0, 0.1);
+  border-color: var(--accent-amber);
+}
+
+.phase-takeoff {
+  color: var(--accent-red);
+  background: rgba(255, 68, 68, 0.1);
+  border-color: var(--accent-red);
+  animation: pulse-border 1s ease-in-out infinite;
+}
+
+.phase-climb {
+  color: var(--accent-cyan);
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--accent-cyan);
+}
+
+.phase-cruise {
+  color: var(--accent-green);
+  background: rgba(0, 255, 65, 0.1);
+  border-color: var(--accent-green);
+}
+
+.phase-descent {
+  color: var(--accent-magenta);
+  background: rgba(255, 0, 255, 0.1);
+  border-color: var(--accent-magenta);
+}
+
+.phase-landing {
+  color: var(--accent-red);
+  background: rgba(255, 68, 68, 0.1);
+  border-color: var(--accent-red);
+  animation: pulse-border 1s ease-in-out infinite;
+}
+
+/* Buttons */
+button,
+.button {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--gauge-border);
+  border-radius: 3px;
+  background: rgba(26, 35, 50, 0.8);
+  color: var(--accent-cyan);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+button:hover:not(:disabled),
+.button:hover:not(:disabled) {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+}
+
+button:active:not(:disabled),
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+button:disabled,
+.button:disabled {
+  color: var(--neutral-medium);
+  border-color: var(--gauge-border);
+  background: rgba(26, 35, 50, 0.5);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Primary Button */
+.button-primary {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+}
+
+.button-primary:hover:not(:disabled) {
+  background: rgba(0, 212, 255, 0.2);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.4);
+}
+
+/* Alert Button */
+.button-alert {
+  background: rgba(255, 68, 68, 0.1);
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.button-alert:hover:not(:disabled) {
+  background: rgba(255, 68, 68, 0.2);
+  box-shadow: 0 0 12px rgba(255, 68, 68, 0.3);
+}
+
+/* Input Fields */
+input[type='text'],
+input[type='number'],
+select {
+  padding: 0.75rem;
+  border: 1px solid var(--gauge-border);
+  border-radius: 3px;
+  background: rgba(26, 35, 50, 0.8);
+  color: var(--neutral-light);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease;
+}
+
+input[type='text']:focus,
+input[type='number']:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.2);
+}
+
+input[type='text']::placeholder,
+input[type='number']::placeholder {
+  color: var(--neutral-medium);
+}
+
+/* Animations */
+@keyframes pulse-border {
+  0%,
+  100% {
+    border-color: var(--accent-red);
+  }
+  50% {
+    border-color: rgba(255, 68, 68, 0.5);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(0, 212, 255, 0.6);
+  }
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes slide-in-down {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+/* Utility Classes */
+.glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.slide-in {
+  animation: slide-in-down 0.4s ease-out;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gauge-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+}
+
+/* Text Colors */
+.text-cyan {
+  color: var(--accent-cyan);
+}
+
+.text-amber {
+  color: var(--accent-amber);
+}
+
+.text-green {
+  color: var(--accent-green);
+}
+
+.text-red {
+  color: var(--accent-red);
+}
+
+.text-muted {
+  color: var(--neutral-medium);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  .gauge {
+    aspect-ratio: auto;
+  }
+}

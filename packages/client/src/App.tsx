@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { FlightMetrics } from './components/FlightMetrics';
+import { CockpitMetrics } from './components/CockpitMetrics';
 import { PassengerList } from './components/PassengerList';
 import { FlightChart } from './components/FlightChart';
+import { FloorPlanVisualization } from './components/FloorPlanVisualization';
+import { CockpitLayout } from './layouts/CockpitLayout';
 import { usePassengerStates } from './hooks/usePassengerStates';
 
 interface FlightStatus {
@@ -34,13 +36,15 @@ export function App() {
   const { states: passengerStates, updateStates } = usePassengerStates(0);
 
   useEffect(() => {
-    // Connect to WebSocket
+    // Connect to WebSocket (always connect to port 3000, not dev server)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}`);
+    const wsUrl = `${protocol}//localhost:3000`;
+    console.log('Connecting to WebSocket:', wsUrl);
+    const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       setConnected(true);
-      console.log('Connected to server');
+      console.log('✓ Connected to server');
     };
 
     ws.onmessage = (event) => {
@@ -71,94 +75,173 @@ export function App() {
       .catch(console.error);
   }, [passengers]);
 
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+
   const handleStartFlight = async () => {
+    console.log('Start Flight clicked, connected:', connected);
+    setIsStarting(true);
+    setStartError(null);
+
     try {
-      const response = await fetch('/api/flight/start/short_haul', { method: 'POST' });
+      console.log('Sending request to /api/flight/start/short_haul');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      const response = await fetch('/api/flight/start/short_haul', {
+        method: 'POST',
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
       const data = await response.json();
+
+      console.log('Response:', data);
 
       if (data.success) {
         setFlightStarted(true);
-        console.log(`Started flight with ${data.passengerCount} passengers`);
+        console.log(`✓ Started flight with ${data.passengerCount} passengers`);
+      } else {
+        const errorMsg = data.error || 'Unknown error';
+        console.error('Flight start failed:', errorMsg);
+        setStartError(errorMsg);
+        setIsStarting(false);
       }
     } catch (error) {
-      console.error('Failed to start flight:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to start flight';
+      console.error('❌ Failed to start flight:', error);
+      setStartError(errorMsg);
+      setIsStarting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-5xl font-bold mb-2">✈️ PAX SIM</h1>
-          <p className="text-gray-400">Flight Passenger Experience Simulator</p>
-        </div>
-
-        {/* Status Bar */}
-        <div className="mb-8 p-4 bg-gray-900 rounded-lg border border-gray-800">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm text-gray-400">Server Status</p>
-              <p className={`text-lg font-bold ${connected ? 'text-green-400' : 'text-red-400'}`}>
-                {connected ? '🟢 Connected' : '🔴 Disconnected'}
+    <CockpitLayout
+      connected={connected}
+      flightStarted={flightStarted}
+      callsign="PAX-SIM"
+      route="SIMULATOR"
+      destination="FLIGHT"
+    >
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        {/* Control Section */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr auto',
+            gap: '1.5rem',
+            marginBottom: '1.5rem',
+            padding: '1.25rem',
+            background: 'rgba(26, 35, 50, 0.85)',
+            border: startError ? '1px solid #ff4444' : '1px solid #1a3d4d',
+            borderRadius: '4px',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <div>
+            <h2 style={{ fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#00d4ff', margin: '0 0 0.75rem 0' }}>
+              Flight Control
+            </h2>
+            <p style={{ fontSize: '0.85rem', color: '#7a8a9e', margin: '0 0 0.5rem 0' }}>
+              {isStarting
+                ? 'Initializing flight...'
+                : passengers.length > 0
+                  ? `${passengers.length} passengers loaded`
+                  : 'Awaiting flight initialization'}
+            </p>
+            {startError && (
+              <p style={{ fontSize: '0.85rem', color: '#ff4444', margin: 0 }}>
+                Error: {startError}
               </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-400">Flight Status</p>
-              <p className={`text-lg font-bold ${flightStarted ? 'text-green-400' : 'text-yellow-400'}`}>
-                {flightStarted ? '✈️ In Progress' : '⏸️ Ready'}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-400">Passengers</p>
-              <p className="text-lg font-bold">{passengers.length}</p>
-            </div>
-
-            {!flightStarted && (
-              <button
-                onClick={handleStartFlight}
-                disabled={!connected}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded-lg font-semibold"
-              >
-                Start Flight
-              </button>
             )}
           </div>
+
+          {!flightStarted && (
+            <button
+              onClick={handleStartFlight}
+              disabled={!connected || isStarting}
+              style={{
+                padding: '0.75rem 1.5rem',
+                border:
+                  isStarting || !connected ? '1px solid #7a8a9e' : '1px solid #00d4ff',
+                borderRadius: '3px',
+                background:
+                  isStarting || !connected
+                    ? 'rgba(122, 138, 158, 0.1)'
+                    : 'rgba(0, 212, 255, 0.1)',
+                color: isStarting || !connected ? '#7a8a9e' : '#00d4ff',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                cursor: connected && !isStarting ? 'pointer' : 'not-allowed',
+                transition: 'all 0.2s ease',
+                fontSize: '0.875rem',
+              }}
+            >
+              {isStarting ? 'Starting...' : 'Start Flight'}
+            </button>
+          )}
         </div>
 
         {/* Flight Metrics */}
-        {flightStatus && <FlightMetrics data={flightStatus} />}
+        {flightStatus && <CockpitMetrics data={flightStatus} />}
 
         {/* Stats Row */}
         {passengerStats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
-              <div className="text-gray-400 text-sm">Economy</div>
-              <div className="text-2xl font-bold">{passengerStats.byClass.economy}</div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '1rem',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <div style={{ padding: '1.25rem', background: 'rgba(26, 35, 50, 0.85)', border: '1px solid #1a3d4d', borderRadius: '4px' }}>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7a8a9e' }}>
+                Economy
+              </div>
+              <div style={{ fontSize: '1.75rem', color: '#00d4ff', fontWeight: 600 }}>
+                {passengerStats.byClass.economy}
+              </div>
             </div>
-            <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
-              <div className="text-gray-400 text-sm">Business</div>
-              <div className="text-2xl font-bold">{passengerStats.byClass.business}</div>
+            <div style={{ padding: '1.25rem', background: 'rgba(26, 35, 50, 0.85)', border: '1px solid #1a3d4d', borderRadius: '4px' }}>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7a8a9e' }}>
+                Business
+              </div>
+              <div style={{ fontSize: '1.75rem', color: '#00d4ff', fontWeight: 600 }}>
+                {passengerStats.byClass.business}
+              </div>
             </div>
-            <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
-              <div className="text-gray-400 text-sm">First Class</div>
-              <div className="text-2xl font-bold">{passengerStats.byClass.first}</div>
+            <div style={{ padding: '1.25rem', background: 'rgba(26, 35, 50, 0.85)', border: '1px solid #1a3d4d', borderRadius: '4px' }}>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7a8a9e' }}>
+                First Class
+              </div>
+              <div style={{ fontSize: '1.75rem', color: '#00d4ff', fontWeight: 600 }}>
+                {passengerStats.byClass.first}
+              </div>
             </div>
-            <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
-              <div className="text-gray-400 text-sm">Frequent Flyers</div>
-              <div className="text-2xl font-bold">{passengerStats.frequentFlyers}</div>
+            <div style={{ padding: '1.25rem', background: 'rgba(26, 35, 50, 0.85)', border: '1px solid #1a3d4d', borderRadius: '4px' }}>
+              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7a8a9e' }}>
+                Frequent Flyers
+              </div>
+              <div style={{ fontSize: '1.75rem', color: '#00d4ff', fontWeight: 600 }}>
+                {passengerStats.frequentFlyers}
+              </div>
             </div>
           </div>
+        )}
+
+        {/* Cabin Visualization */}
+        {passengers.length > 0 && (
+          <FloorPlanVisualization passengers={passengers} passengerStates={passengerStates} />
         )}
 
         {/* Flight Chart */}
         {flightStatus && flightStarted && <FlightChart data={flightStatus} />}
 
-        {/* Passengers */}
+        {/* Passengers List */}
         {passengers.length > 0 && <PassengerList passengers={passengers} passengerStates={passengerStates} />}
       </div>
-    </div>
+    </CockpitLayout>
   );
 }
