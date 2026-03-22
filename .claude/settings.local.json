@@ -11,7 +11,8 @@
       "Bash(curl -s http://localhost:5173)",
       "Bash(curl -v http://localhost:5173)",
       "Bash(curl -s http://localhost:5000/health)",
-      "Bash(curl -X POST http://localhost:3000/api/flight/start/short_haul -H \"Content-Type: application/json\")"
+      "Bash(curl -X POST http://localhost:3000/api/flight/start/short_haul -H \"Content-Type: application/json\")",
+      "Bash(netstat -ano)"
     ]
   }
 }
