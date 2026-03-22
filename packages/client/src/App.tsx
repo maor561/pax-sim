@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { FlightMetrics } from './components/FlightMetrics';
+import { PassengerList } from './components/PassengerList';
 
 interface FlightStatus {
   altitude: number;
@@ -7,19 +9,27 @@ interface FlightStatus {
   turbulence: number;
   phase: string;
   timestamp: number;
+  averageComfort?: number;
+}
+
+interface Passenger {
+  id: string;
+  name: string;
+  age: number;
+  personality: string;
+  ticketClass: string;
+  seatNumber: string;
+  isFrequentFlyer: boolean;
 }
 
 export function App() {
   const [flightStatus, setFlightStatus] = useState<FlightStatus | null>(null);
+  const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [connected, setConnected] = useState(false);
+  const [flightStarted, setFlightStarted] = useState(false);
+  const [passengerStats, setPassengerStats] = useState<any>(null);
 
   useEffect(() => {
-    // Fetch initial flight status
-    fetch('/api/flight/status')
-      .then((res) => res.json())
-      .then(setFlightStatus)
-      .catch(console.error);
-
     // Connect to WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const ws = new WebSocket(`${protocol}//${window.location.host}`);
@@ -31,8 +41,11 @@ export function App() {
 
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
+
       if (message.type === 'flight_update') {
         setFlightStatus(message.data);
+      } else if (message.type === 'passenger_init') {
+        setPassengers(message.data);
       }
     };
 
@@ -44,49 +57,98 @@ export function App() {
     return () => ws.close();
   }, []);
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="container mx-auto p-8">
-        <h1 className="text-4xl font-bold mb-8">PAX SIM</h1>
+  // Fetch passenger stats
+  useEffect(() => {
+    fetch('/api/passengers/stats/distribution')
+      .then((res) => res.json())
+      .then(setPassengerStats)
+      .catch(console.error);
+  }, [passengers]);
 
-        <div className="mb-8 p-4 bg-gray-800 rounded">
-          <p className="text-sm">
-            Status: <span className={connected ? 'text-green-500' : 'text-red-500'}>
-              {connected ? '🟢 Connected' : '🔴 Disconnected'}
-            </span>
-          </p>
+  const handleStartFlight = async () => {
+    try {
+      const response = await fetch('/api/flight/start/short_haul', { method: 'POST' });
+      const data = await response.json();
+
+      if (data.success) {
+        setFlightStarted(true);
+        console.log(`Started flight with ${data.passengerCount} passengers`);
+      }
+    } catch (error) {
+      console.error('Failed to start flight:', error);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-950 text-white">
+      <div className="container mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-5xl font-bold mb-2">✈️ PAX SIM</h1>
+          <p className="text-gray-400">Flight Passenger Experience Simulator</p>
         </div>
 
-        {flightStatus && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 bg-gray-800 rounded">
-              <div className="text-gray-400 text-sm">Altitude</div>
-              <div className="text-2xl font-bold">{flightStatus.altitude.toLocaleString()} ft</div>
+        {/* Status Bar */}
+        <div className="mb-8 p-4 bg-gray-900 rounded-lg border border-gray-800">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-gray-400">Server Status</p>
+              <p className={`text-lg font-bold ${connected ? 'text-green-400' : 'text-red-400'}`}>
+                {connected ? '🟢 Connected' : '🔴 Disconnected'}
+              </p>
             </div>
-            <div className="p-4 bg-gray-800 rounded">
-              <div className="text-gray-400 text-sm">Speed</div>
-              <div className="text-2xl font-bold">{flightStatus.speed} kts</div>
+
+            <div>
+              <p className="text-sm text-gray-400">Flight Status</p>
+              <p className={`text-lg font-bold ${flightStarted ? 'text-green-400' : 'text-yellow-400'}`}>
+                {flightStarted ? '✈️ In Progress' : '⏸️ Ready'}
+              </p>
             </div>
-            <div className="p-4 bg-gray-800 rounded">
-              <div className="text-gray-400 text-sm">G-Force</div>
-              <div className="text-2xl font-bold">{flightStatus.gForce.toFixed(2)}G</div>
+
+            <div>
+              <p className="text-sm text-gray-400">Passengers</p>
+              <p className="text-lg font-bold">{passengers.length}</p>
             </div>
-            <div className="p-4 bg-gray-800 rounded">
-              <div className="text-gray-400 text-sm">Turbulence</div>
-              <div className="text-2xl font-bold">{(flightStatus.turbulence * 100).toFixed(0)}%</div>
+
+            {!flightStarted && (
+              <button
+                onClick={handleStartFlight}
+                disabled={!connected}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded-lg font-semibold"
+              >
+                Start Flight
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Flight Metrics */}
+        {flightStatus && <FlightMetrics data={flightStatus} />}
+
+        {/* Stats Row */}
+        {passengerStats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+              <div className="text-gray-400 text-sm">Economy</div>
+              <div className="text-2xl font-bold">{passengerStats.byClass.economy}</div>
+            </div>
+            <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+              <div className="text-gray-400 text-sm">Business</div>
+              <div className="text-2xl font-bold">{passengerStats.byClass.business}</div>
+            </div>
+            <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+              <div className="text-gray-400 text-sm">First Class</div>
+              <div className="text-2xl font-bold">{passengerStats.byClass.first}</div>
+            </div>
+            <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+              <div className="text-gray-400 text-sm">Frequent Flyers</div>
+              <div className="text-2xl font-bold">{passengerStats.frequentFlyers}</div>
             </div>
           </div>
         )}
 
-        <div className="mt-8 p-4 bg-gray-800 rounded">
-          <h2 className="text-xl font-bold mb-4">Flight Phase</h2>
-          <p className="text-lg capitalize">{flightStatus?.phase || 'Loading...'}</p>
-        </div>
-
-        <div className="mt-8 p-4 bg-gray-800 rounded">
-          <h2 className="text-xl font-bold mb-4">Passengers</h2>
-          <p className="text-gray-400">Coming soon...</p>
-        </div>
+        {/* Passengers */}
+        {passengers.length > 0 && <PassengerList passengers={passengers} />}
       </div>
     </div>
   );
