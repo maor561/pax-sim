@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { FixedSizeList } from 'react-window';
 import { PassengerCard } from './PassengerCard';
 
 interface Passenger {
@@ -11,14 +12,18 @@ interface Passenger {
   isFrequentFlyer: boolean;
 }
 
-interface PassengerListProps {
-  passengers: Passenger[];
+interface PassengerState {
+  state: 'relaxed' | 'comfortable' | 'anxious' | 'scared' | 'panicked';
+  comfort: number;
+  reaction: string;
 }
 
-const ITEMS_PER_PAGE = 50;
+interface PassengerListProps {
+  passengers: Passenger[];
+  passengerStates?: Map<string, PassengerState>;
+}
 
-export function PassengerList({ passengers }: PassengerListProps) {
-  const [currentPage, setCurrentPage] = useState(1);
+export function PassengerList({ passengers, passengerStates = new Map() }: PassengerListProps) {
   const [filterClass, setFilterClass] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -26,20 +31,31 @@ export function PassengerList({ passengers }: PassengerListProps) {
   const filteredPassengers = useMemo(() => {
     return passengers.filter((p) => {
       const matchesClass = filterClass === 'all' || p.ticketClass === filterClass;
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.seatNumber.includes(searchTerm);
+      const matchesSearch =
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.seatNumber.includes(searchTerm);
       return matchesClass && matchesSearch;
     });
   }, [passengers, filterClass, searchTerm]);
 
-  // Paginate
-  const totalPages = Math.ceil(filteredPassengers.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIdx = startIdx + ITEMS_PER_PAGE;
-  const currentPassengers = filteredPassengers.slice(startIdx, endIdx);
+  const handleSearch = useCallback((value: string) => {
+    setSearchTerm(value);
+  }, []);
 
-  const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  }, [totalPages]);
+  const handleFilterChange = useCallback((value: string) => {
+    setFilterClass(value);
+  }, []);
+
+  // Virtual list row renderer
+  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const passenger = filteredPassengers[index];
+    const state = passengerStates.get(passenger.id);
+
+    return (
+      <div style={style} className="p-2">
+        <PassengerCard passenger={passenger} state={state} />
+      </div>
+    );
+  };
 
   return (
     <div className="bg-gray-900 rounded-lg border border-gray-800 p-6">
@@ -53,20 +69,14 @@ export function PassengerList({ passengers }: PassengerListProps) {
             type="text"
             placeholder="Search by name or seat..."
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => handleSearch(e.target.value)}
             className="px-4 py-2 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-blue-500"
           />
 
           {/* Filter */}
           <select
             value={filterClass}
-            onChange={(e) => {
-              setFilterClass(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => handleFilterChange(e.target.value)}
             className="px-4 py-2 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-blue-500"
           >
             <option value="all">All Classes</option>
@@ -77,54 +87,28 @@ export function PassengerList({ passengers }: PassengerListProps) {
 
           {/* Info */}
           <div className="flex items-center justify-end text-gray-400 text-sm">
-            Showing {startIdx + 1}-{Math.min(endIdx, filteredPassengers.length)} of {filteredPassengers.length}
+            Showing {filteredPassengers.length} of {passengers.length} passengers
           </div>
         </div>
       </div>
 
-      {/* Passenger Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
-        {currentPassengers.map((passenger) => (
-          <PassengerCard key={passenger.id} passenger={passenger} />
-        ))}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 rounded"
+      {/* Virtual Scrolling Grid */}
+      {filteredPassengers.length > 0 ? (
+        <div className="bg-gray-800 rounded border border-gray-700 overflow-hidden">
+          <FixedSizeList
+            height={600}
+            itemCount={filteredPassengers.length}
+            itemSize={150}
+            width="100%"
+            layout="grid"
+            columnCount={5}
           >
-            Previous
-          </button>
-
-          <div className="flex gap-1">
-            {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
-              const pageNum = currentPage > 3 ? currentPage - 2 + i : i + 1;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum)}
-                  className={`px-3 py-2 rounded ${
-                    pageNum === currentPage ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-            {totalPages > 5 && <span className="px-2 py-2">...</span>}
-          </div>
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:text-gray-600 rounded"
-          >
-            Next
-          </button>
+            {Row}
+          </FixedSizeList>
+        </div>
+      ) : (
+        <div className="text-center py-12 text-gray-400">
+          <p className="text-lg">No passengers found</p>
         </div>
       )}
     </div>

@@ -13,6 +13,7 @@ let activeClients: Set<WebSocket> = new Set();
 let passengers: Passenger[] = [];
 let responseEngine: PassengerResponseEngine = new PassengerResponseEngine();
 let flightSimulator: any = null;
+let passengerUpdateBatch: PassengerResponse[] = [];
 
 async function broadcastFlightUpdate(flightData: FlightData) {
   const message: WebSocketMessage = {
@@ -64,27 +65,34 @@ async function startFlightSimulationLoop() {
     return;
   }
 
+  // Batch updates - send every 500ms
+  const batchInterval = setInterval(() => {
+    if (passengerUpdateBatch.length > 0) {
+      broadcastPassengerUpdates(passengerUpdateBatch);
+      passengerUpdateBatch = [];
+    }
+  }, 500);
+
   const updateInterval = setInterval(async () => {
     try {
       const flightData = await flightSimulator.getFlightData();
 
       if (!flightData) {
         clearInterval(updateInterval);
+        clearInterval(batchInterval);
         return;
       }
 
       // Broadcast flight update
       await broadcastFlightUpdate(flightData);
 
-      // Calculate passenger responses
+      // Calculate passenger responses and accumulate in batch
       const responses = responseEngine.updatePassengers(passengers, flightData);
-
-      // Broadcast passenger updates every 500ms to avoid too many messages
-      if (Date.now() % 500 < 20) {
-        await broadcastPassengerUpdates(responses);
-      }
+      passengerUpdateBatch.push(...responses);
     } catch (error) {
       console.error('Error in flight simulation loop:', error);
+      clearInterval(updateInterval);
+      clearInterval(batchInterval);
     }
   }, 100); // Update at 10Hz (100ms)
 }

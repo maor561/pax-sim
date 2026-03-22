@@ -38,58 +38,60 @@ export function FlightMetrics({ data }: FlightMetricsProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-      {/* Altitude */}
-      <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
-        <div className="text-gray-400 text-sm mb-1">Altitude</div>
-        <div className="text-3xl font-bold">{Math.round(data.altitude).toLocaleString()}</div>
-        <div className="text-gray-500 text-xs mt-1">ft</div>
-      </div>
-
-      {/* Speed */}
-      <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
-        <div className="text-gray-400 text-sm mb-1">Speed</div>
-        <div className="text-3xl font-bold">{Math.round(data.speed)}</div>
-        <div className="text-gray-500 text-xs mt-1">knots</div>
-      </div>
-
-      {/* G-Force */}
-      <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
-        <div className="text-gray-400 text-sm mb-1">G-Force</div>
-        <div className={`text-3xl font-bold ${getGForceColor(data.gForce)}`}>
-          {data.gForce.toFixed(2)}
-        </div>
-        <div className="text-gray-500 text-xs mt-1">G</div>
-      </div>
-
-      {/* Turbulence */}
-      <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
-        <div className="text-gray-400 text-sm mb-1">Turbulence</div>
-        <div className="relative h-8 bg-gray-800 rounded overflow-hidden">
-          <div
-            className={`h-full transition-all duration-300 ${getTurbulenceColor(data.turbulence)}`}
-            style={{ width: `${data.turbulence * 100}%` }}
-          />
-        </div>
-        <div className="text-gray-500 text-xs mt-1">{(data.turbulence * 100).toFixed(0)}%</div>
-      </div>
-
-      {/* Flight Phase */}
-      <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
-        <div className="text-gray-400 text-sm mb-1">Phase</div>
-        <div className={`px-2 py-1 rounded text-sm font-semibold ${getPhaseColor(data.phase)}`}>
-          {data.phase.toUpperCase()}
-        </div>
-      </div>
-
-      {/* Comfort */}
-      {data.averageComfort !== undefined && (
+    <div className="mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+        {/* Altitude */}
         <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
-          <div className="text-gray-400 text-sm mb-1">Avg Comfort</div>
-          <div className="text-3xl font-bold">{Math.round(data.averageComfort)}</div>
-          <div className="text-gray-500 text-xs mt-1">%</div>
+          <div className="text-gray-400 text-sm mb-1">Altitude</div>
+          <div className="text-3xl font-bold">{Math.round(data.altitude).toLocaleString()}</div>
+          <div className="text-gray-500 text-xs mt-1">ft</div>
         </div>
-      )}
+
+        {/* Speed */}
+        <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+          <div className="text-gray-400 text-sm mb-1">Speed</div>
+          <div className="text-3xl font-bold">{Math.round(data.speed)}</div>
+          <div className="text-gray-500 text-xs mt-1">knots</div>
+        </div>
+
+        {/* G-Force */}
+        <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+          <div className="text-gray-400 text-sm mb-1">G-Force</div>
+          <div className={`text-3xl font-bold ${getGForceColor(data.gForce)}`}>
+            {data.gForce.toFixed(2)}
+          </div>
+          <div className="text-gray-500 text-xs mt-1">G</div>
+        </div>
+
+        {/* Turbulence */}
+        <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+          <div className="text-gray-400 text-sm mb-1">Turbulence</div>
+          <div className="relative h-8 bg-gray-800 rounded overflow-hidden">
+            <div
+              className={`h-full transition-all duration-300 ${getTurbulenceColor(data.turbulence)}`}
+              style={{ width: `${data.turbulence * 100}%` }}
+            />
+          </div>
+          <div className="text-gray-500 text-xs mt-1">{(data.turbulence * 100).toFixed(0)}%</div>
+        </div>
+
+        {/* Flight Phase */}
+        <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+          <div className="text-gray-400 text-sm mb-1">Phase</div>
+          <div className={`px-2 py-1 rounded text-sm font-semibold ${getPhaseColor(data.phase)}`}>
+            {data.phase.toUpperCase()}
+          </div>
+        </div>
+
+        {/* Comfort */}
+        {data.averageComfort !== undefined && (
+          <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+            <div className="text-gray-400 text-sm mb-1">Avg Comfort</div>
+            <div className="text-3xl font-bold">{Math.round(data.averageComfort)}</div>
+            <div className="text-gray-500 text-xs mt-1">%</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { FlightMetrics } from './components/FlightMetrics';
 import { PassengerList } from './components/PassengerList';
+import { FlightChart } from './components/FlightChart';
+import { usePassengerStates } from './hooks/usePassengerStates';
 
 interface FlightStatus {
   altitude: number;
@@ -29,6 +31,8 @@ export function App() {
   const [flightStarted, setFlightStarted] = useState(false);
   const [passengerStats, setPassengerStats] = useState<any>(null);
 
+  const { states: passengerStates, updateStates } = usePassengerStates(0);
+
   useEffect(() => {
     // Connect to WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -46,6 +50,8 @@ export function App() {
         setFlightStatus(message.data);
       } else if (message.type === 'passenger_init') {
         setPassengers(message.data);
+      } else if (message.type === 'passenger_batch_update') {
+        updateStates(message.data.updates);
       }
     };
 
@@ -55,7 +61,7 @@ export function App() {
     };
 
     return () => ws.close();
-  }, []);
+  }, [updateStates]);
 
   // Fetch passenger stats
   useEffect(() => {
@@ -147,8 +153,11 @@ export function App() {
           </div>
         )}
 
+        {/* Flight Chart */}
+        {flightStatus && flightStarted && <FlightChart data={flightStatus} />}
+
         {/* Passengers */}
-        {passengers.length > 0 && <PassengerList passengers={passengers} />}
+        {passengers.length > 0 && <PassengerList passengers={passengers} passengerStates={passengerStates} />}
       </div>
     </div>
   );
