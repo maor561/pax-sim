@@ -18,13 +18,12 @@ interface CabinSeatMapProps {
   passengerStates: Map<string, PassengerState>;
 }
 
-// Boeing 737-800 Layout: 166 seats
-// Business Class (rows 1-4): 16 seats (4 rows × 4 seats)
-// Economy Class (rows 5-29): 150 seats (25 rows × 6 seats)
+// Boeing 737-800 Layout: 184 Economy Seats
+// Economy Class (rows 1-31): 184 seats (31 rows × 6 seats)
 const CABIN_CONFIG = {
   firstClass: { startRow: 0, endRow: 0, rows: 0 }, // Not configured
-  business: { startRow: 1, endRow: 4, rows: 4 },    // 16 seats
-  mainCabin: { startRow: 5, endRow: 29, rows: 25 }, // 150 seats
+  business: { startRow: 0, endRow: 0, rows: 0 },    // Not configured
+  mainCabin: { startRow: 1, endRow: 31, rows: 31 }, // 184 seats
 };
 
 const SEAT_COLUMNS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -47,11 +46,7 @@ export function CabinSeatMap({ passengers, passengerStates }: CabinSeatMapProps)
     }
   };
 
-  const getCabinClass = (row: number): string => {
-    if (row >= CABIN_CONFIG.business.startRow && row <= CABIN_CONFIG.business.endRow)
-      return 'Business';
-    if (row >= CABIN_CONFIG.mainCabin.startRow && row <= CABIN_CONFIG.mainCabin.endRow)
-      return 'Economy';
+  const getCabinClass = (): string => {
     return 'Economy';
   };
 
@@ -80,7 +75,7 @@ export function CabinSeatMap({ passengers, passengerStates }: CabinSeatMapProps)
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Boeing 737-800 Cabin (166 Seats)</h2>
+      <h2 style={styles.title}>Boeing 737-800 Cabin (184 Economy Seats)</h2>
 
       <div style={styles.mainContainer}>
         <div style={styles.mapArea}>
@@ -88,84 +83,63 @@ export function CabinSeatMap({ passengers, passengerStates }: CabinSeatMapProps)
             AIRCRAFT CABIN CONFIGURATION - NOSE LEFT, TAIL RIGHT
           </div>
 
-          <div style={styles.seatGrid}>
-            {/* Header with seat letters */}
-            <div style={styles.seatRow}>
-              <div style={styles.rowLabel} />
-              <div style={styles.seatLetters}>
-                {SEAT_COLUMNS.map((col) => (
-                  <div key={col} style={styles.seatLetter}>
-                    {col}
-                  </div>
-                ))}
-              </div>
+          <div style={styles.seatGridHorizontal}>
+            {/* Cockpit/Nose on left */}
+            <div style={styles.noseTail}>
+              <div style={styles.noseTailLabel}>NOSE</div>
             </div>
 
-            {/* Seat rows */}
+            {/* Seat columns (rows displayed horizontally) */}
             {Array.from({ length: CABIN_CONFIG.mainCabin.endRow }).map((_, rowIdx) => {
               const rowNum = rowIdx + 1;
-              const cabinClass = getCabinClass(rowNum);
-              const cabinColor =
-                cabinClass === 'Business' ? '#9966ff' : '#4488ff';
 
               return (
-                <div key={rowNum} style={styles.seatRow}>
-                  {/* Row number and class */}
-                  <div
-                    style={{
-                      ...styles.rowLabel,
-                      backgroundColor: `${cabinColor}20`,
-                      borderColor: cabinColor,
-                    }}
-                  >
-                    <div style={styles.rowNumber}>{rowNum}</div>
-                    <div style={styles.rowClass}>{cabinClass.split(' ')[0]}</div>
-                  </div>
+                <div key={rowNum} style={styles.seatColumn}>
+                  {/* Row number at top */}
+                  <div style={styles.rowNumberTop}>{rowNum}</div>
 
-                  {/* Seats */}
-                  <div style={styles.seatLetters}>
-                    {SEAT_COLUMNS.map((col) => {
-                      const seatNum = `${rowNum}${col}`;
-                      const data = seatMap.get(seatNum);
-                      const isOccupied = !!data;
-                      const color = data ? getStateColor(data.state?.state) : '#1a3d4d';
+                  {/* Seats A-F vertically */}
+                  {SEAT_COLUMNS.map((col) => {
+                    const seatNum = `${rowNum}${col}`;
+                    const data = seatMap.get(seatNum);
+                    const isOccupied = !!data;
+                    const color = data ? getStateColor(data.state?.state) : '#1a3d4d';
 
-                      return (
-                        <div
-                          key={col}
-                          style={{
-                            ...styles.seat,
-                            backgroundColor: isOccupied ? color : 'transparent',
-                            borderColor: color,
-                            cursor: isOccupied ? 'pointer' : 'default',
-                          }}
-                          title={isOccupied ? `${data.passenger.name} (${data.state?.state})` : seatNum}
-                        >
-                          {isOccupied ? (
-                            <span style={styles.seatSymbol}>◆</span>
-                          ) : (
-                            <span style={styles.seatEmpty}>∘</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                    return (
+                      <div
+                        key={col}
+                        style={{
+                          ...styles.seatSmall,
+                          backgroundColor: isOccupied ? color : 'transparent',
+                          borderColor: color,
+                        }}
+                        title={isOccupied ? `${data.passenger.name} (${data.state?.state})` : seatNum}
+                      >
+                        {isOccupied ? (
+                          <span style={styles.seatSymbolSmall}>◆</span>
+                        ) : (
+                          <span style={styles.seatEmptySmall}>∘</span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
+
+            {/* Tail on right */}
+            <div style={styles.noseTail}>
+              <div style={styles.noseTailLabel}>TAIL</div>
+            </div>
           </div>
 
           {/* Legend */}
           <div style={styles.legend}>
             <div style={styles.legendSection}>
-              <span style={styles.legendLabel}>CABIN CLASSES:</span>
-              <div style={styles.legendItem}>
-                <div style={{ ...styles.legendBox, backgroundColor: '#9966ff' }} />
-                <span>Business (Rows 1-4, 16 seats)</span>
-              </div>
+              <span style={styles.legendLabel}>CABIN CONFIGURATION:</span>
               <div style={styles.legendItem}>
                 <div style={{ ...styles.legendBox, backgroundColor: '#4488ff' }} />
-                <span>Economy (Rows 5-29, 150 seats)</span>
+                <span>Economy (Rows 1-31, 184 seats)</span>
               </div>
             </div>
 
@@ -201,7 +175,7 @@ export function CabinSeatMap({ passengers, passengerStates }: CabinSeatMapProps)
 
           <div style={styles.statBox}>
             <div style={styles.statBoxLabel}>TOTAL PASSENGERS</div>
-            <div style={styles.statBoxValue}>{passengers.length}/166</div>
+            <div style={styles.statBoxValue}>{passengers.length}/184</div>
           </div>
 
           <div style={styles.statBox}>
@@ -296,6 +270,82 @@ const styles = {
     overflowX: 'auto',
     maxHeight: '600px',
     overflowY: 'auto',
+  } as React.CSSProperties,
+
+  seatGridHorizontal: {
+    background: 'rgba(10, 22, 40, 0.6)',
+    border: '1px solid #1a3d4d',
+    borderRadius: '3px',
+    padding: '1.5rem 1rem',
+    overflowX: 'auto',
+    overflowY: 'hidden',
+    display: 'flex',
+    gap: '0.2rem',
+    alignItems: 'center',
+    minHeight: '250px',
+  } as React.CSSProperties,
+
+  noseTail: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    padding: '0.75rem',
+    background: 'rgba(0, 212, 255, 0.1)',
+    border: '2px solid #00d4ff',
+    borderRadius: '3px',
+    minWidth: '60px',
+    minHeight: '200px',
+  } as React.CSSProperties,
+
+  noseTailLabel: {
+    fontSize: '0.75rem',
+    textTransform: 'uppercase',
+    color: '#00d4ff',
+    fontWeight: 700,
+    letterSpacing: '0.1em',
+    writingMode: 'vertical-rl' as any,
+    textOrientation: 'mixed' as any,
+  } as React.CSSProperties,
+
+  seatColumn: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.15rem',
+    alignItems: 'center',
+    flexShrink: 0,
+  } as React.CSSProperties,
+
+  rowNumberTop: {
+    fontSize: '0.6rem',
+    color: '#7a8a9e',
+    fontWeight: 700,
+    fontFamily: "'Source Code Pro', monospace",
+    minHeight: '16px',
+    textAlign: 'center' as const,
+    width: '20px',
+  } as React.CSSProperties,
+
+  seatSmall: {
+    width: '18px',
+    height: '18px',
+    border: '1px solid',
+    borderRadius: '2px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  } as React.CSSProperties,
+
+  seatSymbolSmall: {
+    fontSize: '0.6rem',
+    fontWeight: 700,
+  } as React.CSSProperties,
+
+  seatEmptySmall: {
+    fontSize: '0.65rem',
+    color: '#7a8a9e',
   } as React.CSSProperties,
 
   seatRow: {
